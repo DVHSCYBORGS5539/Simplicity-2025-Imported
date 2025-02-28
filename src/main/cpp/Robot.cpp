@@ -1,7 +1,8 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
-#include "Robot.h"
+#include <Robot.h>
+#include <Drivetrain.h>
 #include <frc/Timer.h>
 #include <fmt/core.h>
 
@@ -35,33 +36,36 @@ void Robot::RobotInit() {
  
  //****wpi::PortForwarder::GetInstance().Add(8888, "wpilibpi.local", 80);
 
-  sparkMax6.SetInverted(true);
-  m_rearRight.SetInverted(true);
-  m_rearLeft.SetInverted(false);
-  m_frontLeft.SetInverted(false);
-  m_rkinematics.DrivePolar(-m_driverController.GetLeftX(), m_driverController.GetLeftY(),
+//need to fix inversion
+  //sparkMax6.SetInverted(true);
+  //m_rearRight.SetInverted(true);
+ // m_rearLeft.SetInverted(false);
+  //m_frontLeft.SetInverted(false);
+   
+  
+ m_robotDrive.DriveCartesian (-m_driverController.GetLeftX(), m_driverController.GetLeftY(),
                                  m_driverController.GetRightTriggerAxis() + -m_driverController.GetLeftTriggerAxis());
 
-SparkMaxConfig config();
+//SparkMaxConfig config();
 
-  config
-    .Inverted(true)
-    .SetIdleMode(SparkMaxConfig::IdleMode::kBrake);
+ // config
+    //.Inverted(true)
+    //.SetIdleMode(SparkMaxConfig::IdleMode::kBrake);
 
 
 
-    m_rkinematics.SetExpiration(100_ms);
+    m_robotDrive.SetExpiration(100_ms);
     m_timer.Start();
   
 // Locations of the wheels relative to the robot center.
 frc::Translation2d m_frontLeftLocation{0.3937_m, 0.3937_m};
 frc::Translation2d m_frontRightLocation{0.3937_m, -0.3937_m};
-frc::Translation2d m_backLeftLocation{-0.3937_m, 0.3937_m};
-frc::Translation2d m_backRightLocation{-0.3937_m, -0.3937_m};
+frc::Translation2d m_rearLeftLocation{-0.3937_m, 0.3937_m};
+frc::Translation2d m_rearRightLocation{-0.3937_m, -0.3937_m};
 
 // Creating my kinematics object using the wheel locations.
 frc::MecanumDriveKinematics m_kinematics{
-  m_frontLeftLocation, m_frontRightLocation, m_backLeftLocation, m_backRightLocation};
+  m_frontLeftLocation, m_frontRightLocation, m_rearLeftLocation, m_rearRightLocation};
 
 ////uncomment the next 2 lines for Boom control
 //m_Boom.Restore FactoryDefaults();
@@ -114,10 +118,11 @@ void Robot::RobotPeriodic()    {
 
 void Robot::AutonomousInit() {
     // Custom Auto goes here
-  m_frontRight.SetInverted(true);
-  m_rearRight.SetInverted(true);
-  m_rearLeft.SetInverted(false);
-  m_frontLeft.SetInverted(false);
+    //fix inversion
+  //m_frontRight.SetInverted(true);
+  //m_rearRight.SetInverted(true);
+  //m_rearLeft.SetInverted(false);
+  //m_frontLeft.SetInverted(false);
 
     m_timer.Reset();
     m_timer.Start();
@@ -134,10 +139,10 @@ void Robot::AutonomousPeriodic()
    {
      if (m_timer.Get() < 3_s) {
       // Drive forwards half speed, make sure to turn input squaring off
-      m_rkinematics.DrivePolar(0.0, 0.3, false);
+        m_robotDrive.DriveCartesianIK (0.0, 0.3, false);
     } else {
       // Stop robot
-      m_rkinematics.DrivePolar(0.0, 0.0, false);
+        m_robotDrive.DriveCartesianIK (0.0, 0.0, false);
   }
   ia++;
 }
@@ -174,7 +179,7 @@ void Robot::TeleopPeriodic() {
 
 
 //Drive Cartesian
-  m_rkinematics.DrivePolar(-m_driverController.GetLeftY(), m_driverController.GetLeftX(),
+  m_robotDrive.DriveCartesianIK (-m_driverController.GetLeftY(), m_driverController.GetLeftX(),
                                m_driverController.GetRightTriggerAxis() + -m_driverController.GetLeftTriggerAxis());
 
 ////read PID coefficients on SmartDashboard...uncomment next 8 lines for Boom control
@@ -225,3 +230,4 @@ int main() {
   return frc::StartRobot<Robot>();
 }
 #endif
+
