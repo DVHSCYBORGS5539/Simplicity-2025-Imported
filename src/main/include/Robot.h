@@ -5,7 +5,7 @@
 #pragma once
 
 #include <string>
-
+#include <numbers>
 //#include "AHRS.h"
 #include <frc/TimedRobot.h>
 //#include <frc/smartdashboard/SendableChooser.h>
@@ -13,7 +13,8 @@
 #include <frc/GenericHID.h>
 #include <frc/DigitalInput.h>
 #include <frc/AnalogInput.h>
-#include <frc/Servo.h>
+
+
 #include <frc/motorcontrol/Spark.h>
 #include <frc/motorcontrol/MotorControllerGroup.h>
 #include <frc/motorcontrol/PWMMotorController.h>
@@ -24,13 +25,18 @@
 
 #include <frc/RobotController.h>
 #include <frc/drive/MecanumDrive.h>
-
+#include <frc/kinematics/MecanumDriveOdometry.h>
+#include <frc/controller/PIDController.h>
+#include <frc/controller/SimpleMotorFeedforward.h>
+#include <frc/estimator/MecanumDrivePoseEstimator.h>
+#include <frc/geometry/Translation2d.h>
 #include <rev/SparkMax.h>
-#include <rev/SparkMaxConfig.h>
-#include <rev/SparkMaxConfigAccessor.h>
+//#include <rev/SparkMaxConfig.h>
+//#include <rev/SparkMaxConfigAccessor.h>
 using namespace rev::spark;
 #include <frc/kinematics/MecanumDriveWheelSpeeds.h>
 #include <frc/Kinematics/MecanumDriveKinematics.h>
+#include <frc/MotorSafety.h>
 #include <frc/drive/DifferentialDrive.h>
 
 #include <frc/Encoder.h>
@@ -74,38 +80,54 @@ class Robot : public frc::TimedRobot {
 
 
   static constexpr int kFrontLeftMotor = 6;
-  static constexpr int kRearLeftMotor = 5;
-  static constexpr int kFrontRightMotor = 8;
-  static constexpr int kRearRightMotor = 7;
-};
+  static constexpr int kRearLeftMotor = 1;
+  static constexpr int kFrontRightMotor = 2;
+  static constexpr int kRearRightMotor = 3;
+
 //uncomment the next 2 lines for Boom control
-  //static constexpr int kBoomChannel = 10;
-  //static constexpr int kGyroPort = 0;
-  
+  static constexpr int kBoomChannel = 4;
+  static constexpr int kGyroPort = 0;
+
+ 
+ }; 
 //CAN
 
-  using namespace rev::spark;
+  //using namespace rev::spark;
 
-  SparkMax m_max{6, SparkMax::MotorType::kBrushless};
-  SparkMax m_max{5, SparkMax::MotorType::kBrushless};
-  SparkMax m_max{8, SparkMax::MotorType::kBrushless};
-  SparkMax m_max{7, SparkMax::MotorType::kBrushless};
+  //SparkMax m_max{6, SparkMax::MotorType::kBrushless};
+  //SparkMax m_max{1, SparkMax::MotorType::kBrushless};
+  //SparkMax m_max{2, SparkMax::MotorType::kBrushless};
+  //SparkMax m_max{3, SparkMax::MotorType::kBrushless};
 
-  
+//PWM
+static const int frontleftPwmChannel = 6, rearrightPwmChannel = 3, rearleftPwnChannel = 1, frontrightPwmChannel = 2;
+
+frc::PWMSparkMax m_frontleftMotor{frontleftPwmChannel};
+frc::PWMSparkMax m_rearrightMotor{rearrightPwmChannel};
+frc::PWMSparkMax m_rearleftMotor{frontleftPwmChannel};
+frc::PWMSparkMax m_frontrightMotor{frontrightPwmChannel};
+
+SparkMax m_frontleftMotor{6, SparkMax::MotorType::kBrushless};
+SparkMax m_rearleftMotor{3, SparkMax::MotorType::kBrushless};
+SparkMax m_frontrightMotor{1, SparkMax::MotorType::kBrushless};
+SparkMax m_rearrightMotor{2, SparkMax::MotorType::kBrushless};
 
 
-
-  frc::MecanumDriveKinematics  m_rkinematics{m_frontLeftLocation, m_backLeftLocation, m_frontRightLocation,m_backRightLocation};
+  frc::MecanumDriveKinematics  m_rkinematics{m_frontLeftLocation, m_rearLeftLocation, m_frontRightLocation, m_rearRightLocation};
   frc::Translation2d m_frontLeftLocation{0.381_m, 0.381_m};
   frc::Translation2d m_frontRightLocation{0.381_m, -0.381_m};
-  frc::Translation2d m_backLeftLocation{-0.381_m, 0.381_m};
-  frc::Translation2d m_backRightLocation{-0.381_m, -0.381_m};
+  frc::Translation2d m_rearLeftLocation{-0.381_m, 0.381_m};
+  frc::Translation2d m_rearRightLocation{-0.381_m, -0.381_m};
 
-static WheelSpeeds frc::MecanumDriveKinematics::DrivePolar (double  xSpeed, double  ySpeed, double  zRotation, Rotation2dgyroAngle = 0_rad );
+//static WheelSpeeds frc::MecanumDriveKinematics::DrivePolar (double  xSpeed, double  ySpeed, double  zRotation, Rotation2dgyroAngle = 0_rad );
 
-
+frc::MecanumDrive m_robotDrive{m_frontleftMotor, m_rearleftMotor, m_frontrightMotor, m_rearrightMotor};
 //uncomment the next line for Boom control
-//rev::SparkMax m_Boom{kBoomChannel, rev::SparkMax::MotorType::kBrushless};
+rev::spark::SparkMax m_Boom(4, SparkMax::MotorType::kBrushless);
+
+//frc::MotorSafety::MotorSafety	(		);	
+//frc::MotorSafety::SetExpiration	(	units::second_t	expirationTime	);	
+
 
 //uncomment the next 5 lines for Boom control
 //rev::SparkRelativeEncoder m_encoder = m_Boom.GetEncoder(rev::SparkRelativeEncoder::Type::kQuadrature, 4096);
@@ -160,6 +182,11 @@ static WheelSpeeds frc::MecanumDriveKinematics::DrivePolar (double  xSpeed, doub
 
   //AHRS *ahrs;
   //float yaw;
+  
+
+  //int kSize640x480 = 0;
+
+
   
 
   //int kSize640x480 = 0;
